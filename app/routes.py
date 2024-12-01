@@ -6,10 +6,19 @@ import pandas as pd
 
 routes = Blueprint("routes", __name__)
 
+
+@routes.route("/api/market-data/symbols", methods=["GET"])
+def get_valid_symbols():
+    """Return a list of valid cryptocurrency symbols."""
+    valid_symbols = [symbol.name for symbol in CryptoSymbols]
+    return jsonify({"symbols": valid_symbols})
+
+
 @routes.route("/api/market-data/<symbol>", methods=["GET"])
 def get_market_data(symbol):
     try:
-        crypto_symbol = CryptoSymbols[symbol]  # Validate and get CryptoSymbols enum
+        # Validate and get CryptoSymbols enum
+        crypto_symbol = CryptoSymbols[symbol]
     except KeyError:
         return jsonify({"error": "Invalid symbol"}), 400
 
@@ -18,11 +27,13 @@ def get_market_data(symbol):
     indicators = calculate_indicators(df)
     return jsonify(indicators.tail(5).to_dict(orient="records"))
 
+
 @routes.route("/api/trade", methods=["POST"])
 def place_trade():
     request_data = request.get_json()
     try:
-        symbol = CryptoSymbols[request_data.get("symbol")]  # Validate and get CryptoSymbols enum
+        # Validate and get CryptoSymbols enum
+        symbol = CryptoSymbols[request_data.get("symbol")]
     except KeyError:
         return jsonify({"error": "Invalid symbol"}), 400
 
