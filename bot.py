@@ -2,6 +2,7 @@ from binance.client import Client
 from binance.enums import *
 from dotenv import load_dotenv
 import os
+import threading
 import pandas as pd
 import time
 import numpy as np
@@ -35,6 +36,36 @@ long_window = 15
 # Global variables
 bot_running = False
 bot_thread = None
+
+
+def start_bot():
+    """Start the trading bot in a separate thread."""
+    global bot_running, bot_thread
+
+    if bot_running:
+        print("Bot is already running.")
+        return {"message": "Bot is already running."}, 400
+
+    bot_running = True
+    bot_thread = threading.Thread(target=trading_bot)
+    bot_thread.start()
+    print("Bot started successfully.")
+    return {"message": "Bot started successfully."}, 200
+
+
+def stop_bot():
+    """Stop the trading bot."""
+    global bot_running, bot_thread
+
+    if not bot_running:
+        print("Bot is not running.")
+        return {"message": "Bot is not running."}, 400
+
+    bot_running = False
+    if bot_thread:
+        bot_thread.join()
+    print("Bot stopped successfully.")
+    return {"message": "Bot stopped successfully."}, 200
 
 
 def fetch_klines(symbol, interval, limit=500):
@@ -73,8 +104,10 @@ def calculate_bollinger_bands(data, window, std_dev):
     """Calculate Bollinger Bands."""
     data['bollinger_mid'] = data['close'].rolling(window=window).mean()
     data['bollinger_std'] = data['close'].rolling(window=window).std()
-    data['bollinger_upper'] = data['bollinger_mid'] + (std_dev * data['bollinger_std'])
-    data['bollinger_lower'] = data['bollinger_mid'] - (std_dev * data['bollinger_std'])
+    data['bollinger_upper'] = data['bollinger_mid'] + \
+        (std_dev * data['bollinger_std'])
+    data['bollinger_lower'] = data['bollinger_mid'] - \
+        (std_dev * data['bollinger_std'])
     return data
 
 
@@ -124,7 +157,8 @@ def trading_bot():
             # Calculate indicators
             data['rsi'] = calculate_rsi(data, rsi_period)
             data = calculate_macd(data, macd_fast, macd_slow, macd_signal)
-            data = calculate_bollinger_bands(data, bollinger_window, bollinger_std_dev)
+            data = calculate_bollinger_bands(
+                data, bollinger_window, bollinger_std_dev)
             data = calculate_supertrend(data, supertrend_multiplier)
             data['sma_short'] = calculate_sma(data, short_window)
             data['sma_long'] = calculate_sma(data, long_window)
@@ -142,8 +176,10 @@ def trading_bot():
             close_price = latest['close']
 
             print(f"RSI: {rsi}, MACD: {macd}, Signal: {macd_signal}")
-            print(f"SuperTrend: {supertrend}, SMA Short: {sma_short}, SMA Long: {sma_long}")
-            print(f"Bollinger Upper: {bollinger_upper}, Bollinger Lower: {bollinger_lower}")
+            print(f"SuperTrend: {supertrend}, SMA Short: {
+                  sma_short}, SMA Long: {sma_long}")
+            print(f"Bollinger Upper: {
+                  bollinger_upper}, Bollinger Lower: {bollinger_lower}")
 
             # Trading logic
             if rsi < rsi_oversold and close_price < bollinger_lower and not in_position:
