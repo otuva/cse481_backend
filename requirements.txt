@@ -1,4 +1,6 @@
 flask
+numpy==1.26.4
 pandas-ta
 python-binance
 python-dotenv
+setuptools
