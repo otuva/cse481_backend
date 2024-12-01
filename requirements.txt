@@ -1,4 +1,4 @@
 flask
-pandas
+pandas-ta
 python-binance
 python-dotenv
