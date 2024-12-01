@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, request
-from app.bot import fetch_market_data, execute_trade
+from flask import Blueprint, Response, jsonify, request
+from app.bot import fetch_market_data
 from app.indicators import calculate_indicators
-from app.enums import CryptoSymbols
+from app.enums import CryptoSymbols, KlineIntervals
 import pandas as pd
 
 routes = Blueprint("routes", __name__)
@@ -14,30 +14,22 @@ def get_valid_symbols():
     return jsonify({"symbols": valid_symbols})
 
 
-@routes.route("/api/market-data/<symbol>", methods=["GET"])
-def get_market_data(symbol):
-    try:
-        # Validate and get CryptoSymbols enum
-        crypto_symbol = CryptoSymbols[symbol]
-    except KeyError:
-        return jsonify({"error": "Invalid symbol"}), 400
+@routes.route("/api/market-data/symbols/intervals", methods=["GET"])
+def get_valid_intervals():
+    """Return a list of valid intervals for Klines."""
+    valid_intervals = [interval.name for interval in KlineIntervals]
+    return jsonify({"intervals": valid_intervals})
 
-    data = fetch_market_data(crypto_symbol)
+
+@routes.route("/api/market-data/<symbol>/<interval>", methods=["GET"])
+def get_market_data(symbol, interval):
+    try:
+        crypto_symbol = CryptoSymbols[symbol]
+        kline_interval = KlineIntervals[interval]
+    except KeyError:
+        return jsonify({"error": "Invalid"}), 400
+
+    data = fetch_market_data(crypto_symbol, kline_interval, 50)
     df = pd.DataFrame(data)
     indicators = calculate_indicators(df)
-    return jsonify(indicators.tail(5).to_dict(orient="records"))
-
-
-@routes.route("/api/trade", methods=["POST"])
-def place_trade():
-    request_data = request.get_json()
-    try:
-        # Validate and get CryptoSymbols enum
-        symbol = CryptoSymbols[request_data.get("symbol")]
-    except KeyError:
-        return jsonify({"error": "Invalid symbol"}), 400
-
-    side = request_data.get("side")
-    quantity = request_data.get("quantity")
-    result = execute_trade(symbol, side, quantity)
-    return jsonify(result)
+    return Response(indicators.to_json(orient="records"), mimetype='application/json')
