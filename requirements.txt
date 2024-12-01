@@ -1,2 +1,3 @@
-python-binance
 flask
+python-binance
+python-dotenv
