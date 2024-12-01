@@ -11,5 +11,5 @@ app.register_blueprint(routes)
 socketio.init_app(app)
 
 if __name__ == "__main__":
-    start_stream()
+    # start_stream()
     socketio.run(app, debug=True)
