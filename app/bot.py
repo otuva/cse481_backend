@@ -104,3 +104,25 @@ def place_trade(symbol: CryptoSymbols, side: TradeSide, quantity: float) -> Dict
         quantity=quantity
     )
     return order
+
+
+def get_balances() -> Dict[str, float]:
+    """
+    Fetch account balances from Binance.
+
+    Returns:
+        Dict[str, float]: A dictionary of asset balances where the balance > 0.
+                          Keys are asset symbols (e.g., 'BTC', 'USDT'), values are balances.
+    """
+    # Fetch account information
+    account_info = client.get_account()
+
+    # Extract balances
+    balances = account_info.get("balances", [])
+    non_zero_balances = {
+        asset["asset"]: float(asset["free"])
+        for asset in balances
+        if float(asset["free"]) > 0
+    }
+
+    return non_zero_balances
