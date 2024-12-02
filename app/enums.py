@@ -28,3 +28,8 @@ class KlineIntervals(Enum):
     T3DAY = Client.KLINE_INTERVAL_3DAY
     T1WEEK = Client.KLINE_INTERVAL_1WEEK
     T1MONTH = Client.KLINE_INTERVAL_1MONTH
+
+
+class TradeSide(Enum):
+    BUY = "BUY"
+    SELL = "SELL"
