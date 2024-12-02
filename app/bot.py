@@ -82,3 +82,25 @@ def fetch_market_data(symbol: CryptoSymbols, interval: KlineIntervals, limit: in
     )
 
     return process_klines(klines)
+
+
+def place_trade(symbol: CryptoSymbols, side: TradeSide, quantity: float) -> Dict:
+    """
+    Place a trade (buy or sell) on Binance.
+
+    Args:
+        symbol (CryptoSymbols): The cryptocurrency symbol to trade (e.g., CryptoSymbols.BTCUSDT).
+        side (TradeSide): The trade side, either TradeSide.BUY or TradeSide.SELL.
+        quantity (float): The quantity of the asset to trade.
+
+    Returns:
+        Dict: The response from the Binance API for the trade.
+    """
+    # Create the order
+    order = client.create_order(
+        symbol=symbol.value,
+        side=side.value,  # Convert TradeSide enum to string
+        type=Client.ORDER_TYPE_MARKET,
+        quantity=quantity
+    )
+    return order
